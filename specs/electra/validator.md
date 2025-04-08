@@ -85,6 +85,7 @@ class SignedAggregateAndProof(Container):
 
 #### Modified `get_payload`
 @BERA: Implemented already
+
 Given the `payload_id`, `get_payload` returns the most recent version of the execution payload that
 has been built since the corresponding call to `notify_forkchoice_updated` method.
 
@@ -103,6 +104,7 @@ def get_payload(self: ExecutionEngine, payload_id: PayloadId) -> GetPayloadRespo
 
 #### Attester slashings
 @BERA: Skip as we don't implement slashing
+
 Changed the max attester slashings size to `MAX_ATTESTER_SLASHINGS_ELECTRA`.
 
 #### Attestations
