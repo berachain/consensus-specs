@@ -282,7 +282,7 @@ def get_execution_requests(execution_requests_list: Sequence[bytes]) -> Executio
 ```
 
 ### Constructing the `BlobSidecar`s
-@BERA: Skip as we don't implement BlobSidecars
+@BERA: Skip as we don't implement EIP7691
 
 #### Sidecar
 
