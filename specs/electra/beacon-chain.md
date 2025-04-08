@@ -217,6 +217,8 @@ The following values are (non-configurable) constants used throughout the specif
 
 #### `PendingDeposit`
 
+@BERA: Not used
+
 *Note*: The container is new in EIP7251.
 
 ```python
@@ -230,6 +232,8 @@ class PendingDeposit(Container):
 
 #### `PendingPartialWithdrawal`
 
+@BERA: REZ - Maybe used?
+
 *Note*: The container is new in EIP7251.
 
 ```python
@@ -241,6 +245,8 @@ class PendingPartialWithdrawal(Container):
 
 #### `PendingConsolidation`
 
+@BERA: Not used
+
 *Note*: The container is new in EIP7251.
 
 ```python
@@ -250,6 +256,8 @@ class PendingConsolidation(Container):
 ```
 
 #### `DepositRequest`
+
+@BERA: Added but unused
 
 *Note*: The container is new in EIP6110.
 
@@ -264,6 +272,8 @@ class DepositRequest(Container):
 
 #### `WithdrawalRequest`
 
+@BERA: Added
+
 *Note*: The container is new in EIP7251:EIP7002.
 
 ```python
@@ -274,6 +284,8 @@ class WithdrawalRequest(Container):
 ```
 
 #### `ConsolidationRequest`
+
+@BERA: Added but unused
 
 *Note*: The container is new in EIP7251.
 
@@ -286,6 +298,8 @@ class ConsolidationRequest(Container):
 
 #### `ExecutionRequests`
 
+@BERA: Added
+
 ```python
 class ExecutionRequests(Container):
     deposits: List[DepositRequest, MAX_DEPOSIT_REQUESTS_PER_PAYLOAD]  # [New in Electra:EIP6110]
@@ -294,6 +308,8 @@ class ExecutionRequests(Container):
 ```
 
 #### `SingleAttestation`
+
+@BERA: Unused
 
 ```python
 class SingleAttestation(Container):
@@ -307,6 +323,8 @@ class SingleAttestation(Container):
 
 #### `AttesterSlashing`
 
+@BERA: Unused
+
 ```python
 class AttesterSlashing(Container):
     attestation_1: IndexedAttestation  # [Modified in Electra:EIP7549]
@@ -314,6 +332,8 @@ class AttesterSlashing(Container):
 ```
 
 #### `BeaconBlockBody`
+
+@BERA: `execution_requests` added.
 
 ```python
 class BeaconBlockBody(Container):
@@ -338,6 +358,8 @@ class BeaconBlockBody(Container):
 
 #### `Attestation`
 
+@BERA: Unused
+
 ```python
 class Attestation(Container):
     aggregation_bits: Bitlist[MAX_VALIDATORS_PER_COMMITTEE * MAX_COMMITTEES_PER_SLOT]  # [Modified in Electra:EIP7549]
@@ -348,6 +370,8 @@ class Attestation(Container):
 
 #### `IndexedAttestation`
 
+@BERA: Unused
+
 ```python
 class IndexedAttestation(Container):
     # [Modified in Electra:EIP7549]
@@ -357,6 +381,8 @@ class IndexedAttestation(Container):
 ```
 
 #### `BeaconState`
+
+@BERA: Potentially need `pending_partial_withdrawals` ?
 
 ```python
 class BeaconState(Container):
@@ -401,16 +427,16 @@ class BeaconState(Container):
     next_withdrawal_validator_index: ValidatorIndex
     # Deep history valid from Capella onwards
     historical_summaries: List[HistoricalSummary, HISTORICAL_ROOTS_LIMIT]
-    deposit_requests_start_index: uint64  # [New in Electra:EIP6110]
-    deposit_balance_to_consume: Gwei  # [New in Electra:EIP7251]
-    exit_balance_to_consume: Gwei  # [New in Electra:EIP7251]
-    earliest_exit_epoch: Epoch  # [New in Electra:EIP7251]
-    consolidation_balance_to_consume: Gwei  # [New in Electra:EIP7251]
-    earliest_consolidation_epoch: Epoch  # [New in Electra:EIP7251]
-    pending_deposits: List[PendingDeposit, PENDING_DEPOSITS_LIMIT]  # [New in Electra:EIP7251]
+    deposit_requests_start_index: uint64  # [New in Electra:EIP6110] @BERA: Unused
+    deposit_balance_to_consume: Gwei  # [New in Electra:EIP7251] @BERA: Unused
+    exit_balance_to_consume: Gwei  # [New in Electra:EIP7251] @BERA: Unused
+    earliest_exit_epoch: Epoch  # [New in Electra:EIP7251] @BERA: Unused
+    consolidation_balance_to_consume: Gwei  # [New in Electra:EIP7251] @BERA: Unused
+    earliest_consolidation_epoch: Epoch  # [New in Electra:EIP7251] @BERA: Unused
+    pending_deposits: List[PendingDeposit, PENDING_DEPOSITS_LIMIT]  # [New in Electra:EIP7251] @BERA: Unused
     # [New in Electra:EIP7251]
     pending_partial_withdrawals: List[PendingPartialWithdrawal, PENDING_PARTIAL_WITHDRAWALS_LIMIT]
-    pending_consolidations: List[PendingConsolidation, PENDING_CONSOLIDATIONS_LIMIT]  # [New in Electra:EIP7251]
+    pending_consolidations: List[PendingConsolidation, PENDING_CONSOLIDATIONS_LIMIT]  # [New in Electra:EIP7251] @BERA: Unused
 ```
 
 ## Helper functions
@@ -419,10 +445,12 @@ class BeaconState(Container):
 
 #### Modified `compute_proposer_index`
 
+@BERA: We do not use this for computing proposer index in berachain.
+
 *Note*: The function `compute_proposer_index` is modified to use `MAX_EFFECTIVE_BALANCE_ELECTRA` and to use a 16-bit random value instead of an 8-bit random byte in the effective balance filter.
 
 ```python
-def compute_proposer_index(state: BeaconState, indices: Sequence[ValidatorIndex], seed: Bytes32) -> ValidatorIndex:
+    def compute_proposer_index(state: BeaconState, indices: Sequence[ValidatorIndex], seed: Bytes32) -> ValidatorIndex:
     """
     Return from ``indices`` a random index sampled by effective balance.
     """
@@ -445,6 +473,8 @@ def compute_proposer_index(state: BeaconState, indices: Sequence[ValidatorIndex]
 
 #### Modified `is_eligible_for_activation_queue`
 
+@BERA: Effectively already implemented as we have `v.EffectiveBalance >= threshold`, where `threshold` is equivalent to `MIN_ACTIVATION_BALANCE`.
+
 *Note*: The function `is_eligible_for_activation_queue` is modified to use `MIN_ACTIVATION_BALANCE` instead of `MAX_EFFECTIVE_BALANCE`.
 
 ```python
@@ -460,12 +490,16 @@ def is_eligible_for_activation_queue(validator: Validator) -> bool:
 
 #### New `is_compounding_withdrawal_credential`
 
+@BERA: Unused
+
 ```python
 def is_compounding_withdrawal_credential(withdrawal_credentials: Bytes32) -> bool:
     return withdrawal_credentials[:1] == COMPOUNDING_WITHDRAWAL_PREFIX
 ```
 
 #### New `has_compounding_withdrawal_credential`
+
+@BERA: Unused
 
 ```python
 def has_compounding_withdrawal_credential(validator: Validator) -> bool:
@@ -477,6 +511,8 @@ def has_compounding_withdrawal_credential(validator: Validator) -> bool:
 
 #### New `has_execution_withdrawal_credential`
 
+@BERA: Will always return true for us as all validators have 0x01 prefixed withdrawal credentials.
+
 ```python
 def has_execution_withdrawal_credential(validator: Validator) -> bool:
     """
@@ -486,6 +522,8 @@ def has_execution_withdrawal_credential(validator: Validator) -> bool:
 ```
 
 #### Modified `is_fully_withdrawable_validator`
+
+@BERA: Should be easy change.
 
 *Note*: The function `is_fully_withdrawable_validator` is modified to use `has_execution_withdrawal_credential` instead of `has_eth1_withdrawal_credential`.
 
@@ -502,6 +540,8 @@ def is_fully_withdrawable_validator(validator: Validator, balance: Gwei, epoch: 
 ```
 
 #### Modified `is_partially_withdrawable_validator`
+
+@BERA: Will need adopt this change so that we can appropriately check if a validator has excess balance, i.e. greater than 250k BERA.
 
 *Note*: The function `is_partially_withdrawable_validator` is modified to use `get_max_effective_balance` instead of `MAX_EFFECTIVE_BALANCE` and `has_execution_withdrawal_credential` instead of `has_eth1_withdrawal_credential`.
 
@@ -524,12 +564,16 @@ def is_partially_withdrawable_validator(validator: Validator, balance: Gwei) -> 
 
 #### New `get_committee_indices`
 
+@BERA: Unused
+
 ```python
 def get_committee_indices(committee_bits: Bitvector) -> Sequence[CommitteeIndex]:
     return [CommitteeIndex(index) for index, bit in enumerate(committee_bits) if bit]
 ```
 
 #### New `get_max_effective_balance`
+
+@BERA: Adopt, but will always return MIN_ACTIVATION_BALANCE for us, i.e 250k BERA.
 
 ```python
 def get_max_effective_balance(validator: Validator) -> Gwei:
@@ -546,6 +590,8 @@ def get_max_effective_balance(validator: Validator) -> Gwei:
 
 #### New `get_balance_churn_limit`
 
+@BERA: Unknown if needed. Ideally not.
+
 ```python
 def get_balance_churn_limit(state: BeaconState) -> Gwei:
     """
@@ -560,6 +606,8 @@ def get_balance_churn_limit(state: BeaconState) -> Gwei:
 
 #### New `get_activation_exit_churn_limit`
 
+@BERA: Unknown if needed. Ideally not.
+
 ```python
 def get_activation_exit_churn_limit(state: BeaconState) -> Gwei:
     """
@@ -570,12 +618,16 @@ def get_activation_exit_churn_limit(state: BeaconState) -> Gwei:
 
 #### New `get_consolidation_churn_limit`
 
+@BERA: Unknown if needed. Ideally not.
+
 ```python
 def get_consolidation_churn_limit(state: BeaconState) -> Gwei:
     return get_balance_churn_limit(state) - get_activation_exit_churn_limit(state)
 ```
 
 #### New `get_pending_balance_to_withdraw`
+
+@BERA: Used in `process_withdrawal_request`.
 
 ```python
 def get_pending_balance_to_withdraw(state: BeaconState, validator_index: ValidatorIndex) -> Gwei:
@@ -586,6 +638,8 @@ def get_pending_balance_to_withdraw(state: BeaconState, validator_index: Validat
 ```
 
 #### Modified `get_attesting_indices`
+
+@BERA: Unused.
 
 *Note*: The function `get_attesting_indices` is modified to support EIP7549.
 
@@ -611,6 +665,8 @@ def get_attesting_indices(state: BeaconState, attestation: Attestation) -> Set[V
 ```
 
 #### Modified `get_next_sync_committee_indices`
+
+@BERA: Unused
 
 *Note*: The function `get_next_sync_committee_indices` is modified to use `MAX_EFFECTIVE_BALANCE_ELECTRA` and to use a 16-bit random value instead of an 8-bit random byte in the effective balance filter.
 
@@ -646,6 +702,8 @@ def get_next_sync_committee_indices(state: BeaconState) -> Sequence[ValidatorInd
 
 #### Modified `initiate_validator_exit`
 
+@BERA: We may need to add this as it's used in `processRegistryUpdates`.
+
 *Note*: The function `initiate_validator_exit` is modified to use the new `compute_exit_epoch_and_update_churn` function.
 
 ```python
@@ -667,6 +725,8 @@ def initiate_validator_exit(state: BeaconState, index: ValidatorIndex) -> None:
 ```
 
 #### New `switch_to_compounding_validator`
+
+@BERA: Unused.
 
 ```python
 def switch_to_compounding_validator(state: BeaconState, index: ValidatorIndex) -> None:
