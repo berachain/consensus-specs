@@ -573,7 +573,7 @@ def get_committee_indices(committee_bits: Bitvector) -> Sequence[CommitteeIndex]
 
 #### New `get_max_effective_balance`
 
-@BERA: Adopt, but will always return MIN_ACTIVATION_BALANCE for us, i.e 250k BERA.
+@BERA: Not needed as we always return the chainspec Max effective balance.
 
 ```python
 def get_max_effective_balance(validator: Validator) -> Gwei:
@@ -736,6 +736,8 @@ def switch_to_compounding_validator(state: BeaconState, index: ValidatorIndex) -
 ```
 
 #### New `queue_excess_active_balance`
+
+@BERA: Unused.
 
 ```python
 def queue_excess_active_balance(state: BeaconState, index: ValidatorIndex) -> None:
@@ -1044,7 +1046,7 @@ def process_effective_balance_updates(state: BeaconState) -> None:
         HYSTERESIS_INCREMENT = uint64(EFFECTIVE_BALANCE_INCREMENT // HYSTERESIS_QUOTIENT)
         DOWNWARD_THRESHOLD = HYSTERESIS_INCREMENT * HYSTERESIS_DOWNWARD_MULTIPLIER
         UPWARD_THRESHOLD = HYSTERESIS_INCREMENT * HYSTERESIS_UPWARD_MULTIPLIER
-        # [Modified in Electra:EIP7251]
+        # [Modified in Electra:EIP7251] @BERA: This is effectively already done.
         max_effective_balance = get_max_effective_balance(validator)
 
         if (
