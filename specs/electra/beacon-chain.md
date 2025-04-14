@@ -112,11 +112,11 @@
 
 Electra is a consensus-layer upgrade containing a number of features. Including:
 
-- [EIP-6110](https://eips.ethereum.org/EIPS/eip-6110): Supply validator deposits on chain
-- [EIP-7002](https://eips.ethereum.org/EIPS/eip-7002): Execution layer triggerable exits
+- [EIP-6110](https://eips.ethereum.org/EIPS/eip-6110): Supply validator deposits on chain - @BERA: Changes related to EIP are is skipped as we have a functional deposit system.
+- [EIP-7002](https://eips.ethereum.org/EIPS/eip-7002): Execution layer triggerable exits.
 - [EIP-7251](https://eips.ethereum.org/EIPS/eip-7251): Increase the MAX_EFFECTIVE_BALANCE
-- [EIP-7549](https://eips.ethereum.org/EIPS/eip-7549): Move committee index outside Attestation
-- [EIP-7691](https://eips.ethereum.org/EIPS/eip-7691): Blob throughput increase
+- [EIP-7549](https://eips.ethereum.org/EIPS/eip-7549): Move committee index outside Attestation - @BERA: Changes related to EIP are is skipped as we do not use attestations.
+- [EIP-7691](https://eips.ethereum.org/EIPS/eip-7691): Changes related to EIP are is skipped as we will not increase blob throughput.
 
 *Note*: This specification is built upon [Deneb](../deneb/beacon-chain.md) and is under active development.
 
@@ -131,11 +131,17 @@ The following values are (non-configurable) constants used throughout the specif
 | `UNSET_DEPOSIT_REQUESTS_START_INDEX` | `uint64(2**64 - 1)` | *[New in Electra:EIP6110]* Value which indicates no start index has been assigned |
 | `FULL_EXIT_REQUEST_AMOUNT`           | `uint64(0)`         | *[New in Electra:EIP7002]* Withdrawal amount used to signal a full validator exit |
 
+@BERA:
+
+- `UNSET_DEPOSIT_REQUESTS_START_INDEX` is not introduced due to excluding EIP6110.
+
 ### Withdrawal prefixes
 
 | Name                            | Value            | Description                                                                         |
 | ------------------------------- | ---------------- | ----------------------------------------------------------------------------------- |
 | `COMPOUNDING_WITHDRAWAL_PREFIX` | `Bytes1('0x02')` | *[New in Electra:EIP7251]* Withdrawal credential prefix for a compounding validator |
+
+@BERA: In Ethereum, compounding validators are those can have a balance higher than 32 ETH, introduced as part of EIP-7251. In Berachain, all validators are considered 'compounding validators' as they can all have a balance above 250k BERA. As such, we skip distinguishing between compounding and non-compounding validators.
 
 ### Execution layer triggered requests
 
@@ -144,6 +150,8 @@ The following values are (non-configurable) constants used throughout the specif
 | `DEPOSIT_REQUEST_TYPE`       | `Bytes1('0x00')` |
 | `WITHDRAWAL_REQUEST_TYPE`    | `Bytes1('0x01')` |
 | `CONSOLIDATION_REQUEST_TYPE` | `Bytes1('0x02')` |
+
+@BERA: We introduce all of these fields, however, the Consensus Layer will only process `WITHDRAWAL_REQUEST_TYPE`. This means that if a user attempts to submit a `CONSOLIDATION_REQUEST_TYPE` or `DEPOSIT_REQUEST_TYPE`, they should expect to see no change to the system. However, their transaction will still be accepted on the execution layer.
 
 ## Preset
 
@@ -154,12 +162,16 @@ The following values are (non-configurable) constants used throughout the specif
 | `MIN_ACTIVATION_BALANCE`        | `Gwei(2**5 * 10**9)` (= 32,000,000,000)    | *[New in Electra:EIP7251]* Minimum balance for a validator to become active      |
 | `MAX_EFFECTIVE_BALANCE_ELECTRA` | `Gwei(2**11 * 10**9)` (= 2048,000,000,000) | *[New in Electra:EIP7251]* Maximum effective balance for a compounding validator |
 
+@BERA: In Berachain, `MIN_ACTIVATION_BALANCE` will be set to reflected as 250K Bera and `MAX_EFFECTIVE_BALANCE_ELECTRA` will be reflected as 10_000_000 BERA.
+
 ### Rewards and penalties
 
 | Name                                    | Value                     |
 | --------------------------------------- | ------------------------- |
 | `MIN_SLASHING_PENALTY_QUOTIENT_ELECTRA` | `uint64(2**12)` (= 4,096) |
 | `WHISTLEBLOWER_REWARD_QUOTIENT_ELECTRA` | `uint64(2**12)` (= 4,096) |
+
+@BERA: These are slashing related and hence not introduced.
 
 ### State list lengths
 
@@ -184,11 +196,15 @@ The following values are (non-configurable) constants used throughout the specif
 | `MAX_WITHDRAWAL_REQUESTS_PER_PAYLOAD`    | `uint64(2**4)` (= 16)     | *[New in Electra:EIP7002]* Maximum number of execution layer withdrawal requests in each payload    |
 | `MAX_CONSOLIDATION_REQUESTS_PER_PAYLOAD` | `uint64(2**1)` (= 2)      | *[New in Electra:EIP7251]* Maximum number of execution layer consolidation requests in each payload |
 
+@BERA: We keep the values the same in Berachain.
+
 ### Withdrawals processing
 
 | Name                                         | Value                | Description                                                                                     |
 | -------------------------------------------- | -------------------- | ----------------------------------------------------------------------------------------------- |
 | `MAX_PENDING_PARTIALS_PER_WITHDRAWALS_SWEEP` | `uint64(2**3)` (= 8) | *[New in Electra:EIP7002]* Maximum number of pending partial withdrawals to process per payload |
+
+@BERA: We keep the values the same in Berachain.
 
 ### Pending deposits processing
 
@@ -204,6 +220,8 @@ The following values are (non-configurable) constants used throughout the specif
 | ----------------------------- | ----------- | ---------------------------------------------------------------------------------------------------------------- |
 | `MAX_BLOBS_PER_BLOCK_ELECTRA` | `uint64(9)` | *[New in Electra:EIP7691]* Maximum number of blobs in a single block limited by `MAX_BLOB_COMMITMENTS_PER_BLOCK` |
 
+@BERA: We do not increase the `MAX_BLOBS_PER_BLOCK` and hence keep it at `6` rather than increasing to `9`.
+
 ### Validator cycle
 
 | Name                                        | Value                                    |
@@ -211,13 +229,13 @@ The following values are (non-configurable) constants used throughout the specif
 | `MIN_PER_EPOCH_CHURN_LIMIT_ELECTRA`         | `Gwei(2**7 * 10**9)` (= 128,000,000,000) |
 | `MAX_PER_EPOCH_ACTIVATION_EXIT_CHURN_LIMIT` | `Gwei(2**8 * 10**9)` (= 256,000,000,000) |
 
+@BERA: Churn is related to how many validators can exit at any given point, such that too many validators cannot exit in a short period of time. We adopt these values for spec parity, although realistically we will never hit these as our validator set size is much smaller.
+
 ## Containers
 
 ### New containers
 
 #### `PendingDeposit`
-
-@BERA: Not used
 
 *Note*: The container is new in EIP7251.
 
@@ -230,9 +248,9 @@ class PendingDeposit(Container):
     slot: Slot
 ```
 
-#### `PendingPartialWithdrawal`
+@BERA: Not used and hence not introduced.
 
-@BERA: Must be introduced
+#### `PendingPartialWithdrawal`
 
 *Note*: The container is new in EIP7251.
 
@@ -242,6 +260,8 @@ class PendingPartialWithdrawal(Container):
     amount: Gwei
     withdrawable_epoch: Epoch
 ```
+
+@BERA: Must be introduced to support the withdrawals logic.
 
 #### `PendingConsolidation`
 
@@ -255,9 +275,9 @@ class PendingConsolidation(Container):
     target_index: ValidatorIndex
 ```
 
-#### `DepositRequest`
+@BERA: Not used and hence not introduced.
 
-@BERA: Added but unused
+#### `DepositRequest`
 
 *Note*: The container is new in EIP6110.
 
@@ -269,6 +289,8 @@ class DepositRequest(Container):
     signature: BLSSignature
     index: uint64
 ```
+
+@BERA: Introduced for parity in ExecutionRequestsRoot calculation but unused.
 
 #### `WithdrawalRequest`
 
@@ -296,9 +318,9 @@ class ConsolidationRequest(Container):
     target_pubkey: BLSPubkey
 ```
 
-#### `ExecutionRequests`
+@BERA: Introduced for parity in ExecutionRequestsRoot calculation but unused.
 
-@BERA: Added
+#### `ExecutionRequests`
 
 ```python
 class ExecutionRequests(Container):
@@ -308,8 +330,6 @@ class ExecutionRequests(Container):
 ```
 
 #### `SingleAttestation`
-
-@BERA: Unused
 
 ```python
 class SingleAttestation(Container):
@@ -323,17 +343,15 @@ class SingleAttestation(Container):
 
 #### `AttesterSlashing`
 
-@BERA: Unused
-
 ```python
 class AttesterSlashing(Container):
     attestation_1: IndexedAttestation  # [Modified in Electra:EIP7549]
     attestation_2: IndexedAttestation  # [Modified in Electra:EIP7549]
 ```
 
-#### `BeaconBlockBody`
+@BERA: Not used and hence not introduced.
 
-@BERA: `execution_requests` added.
+#### `BeaconBlockBody`
 
 ```python
 class BeaconBlockBody(Container):
@@ -354,11 +372,11 @@ class BeaconBlockBody(Container):
     execution_requests: ExecutionRequests  # [New in Electra]
 ```
 
+@BERA: We extend the beacon block body with `execution_requests`.
+
 ### Modified containers
 
 #### `Attestation`
-
-@BERA: Unused
 
 ```python
 class Attestation(Container):
@@ -368,9 +386,9 @@ class Attestation(Container):
     committee_bits: Bitvector[MAX_COMMITTEES_PER_SLOT]  # [New in Electra:EIP7549]
 ```
 
-#### `IndexedAttestation`
+@BERA: Not used and hence changes not introduced.
 
-@BERA: Unused
+#### `IndexedAttestation`
 
 ```python
 class IndexedAttestation(Container):
@@ -380,9 +398,9 @@ class IndexedAttestation(Container):
     signature: BLSSignature
 ```
 
-#### `BeaconState`
+@BERA: Not used and hence changes not introduced.
 
-@BERA: Potentially need `pending_partial_withdrawals` ?
+#### `BeaconState`
 
 ```python
 class BeaconState(Container):
@@ -439,13 +457,13 @@ class BeaconState(Container):
     pending_consolidations: List[PendingConsolidation, PENDING_CONSOLIDATIONS_LIMIT]  # [New in Electra:EIP7251] @BERA: Unused
 ```
 
+@BERA: We must introduce the `pending_partial_withdrawals` as it's necessarily for the core withdrawals logic.
+
 ## Helper functions
 
 ### Predicates
 
 #### Modified `compute_proposer_index`
-
-@BERA: We do not use this for computing proposer index in berachain.
 
 *Note*: The function `compute_proposer_index` is modified to use `MAX_EFFECTIVE_BALANCE_ELECTRA` and to use a 16-bit random value instead of an 8-bit random byte in the effective balance filter.
 
@@ -471,9 +489,9 @@ class BeaconState(Container):
         i += 1
 ```
 
-#### Modified `is_eligible_for_activation_queue`
+@BERA: We do not use this for computing proposer index in berachain.
 
-@BERA: Effectively already implemented as we have `v.EffectiveBalance >= threshold`, where `threshold` is equivalent to `MIN_ACTIVATION_BALANCE`.
+#### Modified `is_eligible_for_activation_queue`
 
 *Note*: The function `is_eligible_for_activation_queue` is modified to use `MIN_ACTIVATION_BALANCE` instead of `MAX_EFFECTIVE_BALANCE`.
 
@@ -488,18 +506,18 @@ def is_eligible_for_activation_queue(validator: Validator) -> bool:
     )
 ```
 
-#### New `is_compounding_withdrawal_credential`
+@BERA: Effectively already implemented as we have `v.EffectiveBalance >= threshold`, where `threshold` is equivalent to `MIN_ACTIVATION_BALANCE`.
 
-@BERA: Unused
+#### New `is_compounding_withdrawal_credential`
 
 ```python
 def is_compounding_withdrawal_credential(withdrawal_credentials: Bytes32) -> bool:
     return withdrawal_credentials[:1] == COMPOUNDING_WITHDRAWAL_PREFIX
 ```
 
-#### New `has_compounding_withdrawal_credential`
+@BERA: `is_compounding_withdrawal_credential` is only used in `has_compounding_withdrawal_credential`. In Berachain `has_compounding_withdrawal_credential` will always return True as all validators are considered compounding validators. As such, we do not introduce this function.
 
-@BERA: Unused
+#### New `has_compounding_withdrawal_credential`
 
 ```python
 def has_compounding_withdrawal_credential(validator: Validator) -> bool:
@@ -509,9 +527,9 @@ def has_compounding_withdrawal_credential(validator: Validator) -> bool:
     return is_compounding_withdrawal_credential(validator.withdrawal_credentials)
 ```
 
-#### New `has_execution_withdrawal_credential`
+@BERA: `has_compounding_withdrawal_credential` but always returns true. See reasoning in `is_compounding_withdrawal_credential`.
 
-@BERA: Will always return true for us as all validators have 0x01 prefixed withdrawal credentials.
+#### New `has_execution_withdrawal_credential`
 
 ```python
 def has_execution_withdrawal_credential(validator: Validator) -> bool:
@@ -521,9 +539,15 @@ def has_execution_withdrawal_credential(validator: Validator) -> bool:
     return has_compounding_withdrawal_credential(validator) or has_eth1_withdrawal_credential(validator)
 ```
 
-#### Modified `is_fully_withdrawable_validator`
+@BERA: Berachain only supports 0x01 credentials, so all validators should have this return true. We modify the implementation as below since `has_compounding_withdrawal_credential` will always returns true:
 
-@BERA: Should be easy change.
+```go
+    func (v Validator) HasExecutionWithdrawalCredential() bool {
+        return v.HasEth1WithdrawalCredentials()
+    }
+```
+
+#### Modified `is_fully_withdrawable_validator`
 
 *Note*: The function `is_fully_withdrawable_validator` is modified to use `has_execution_withdrawal_credential` instead of `has_eth1_withdrawal_credential`.
 
