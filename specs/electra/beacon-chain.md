@@ -229,7 +229,7 @@ The following values are (non-configurable) constants used throughout the specif
 | `MIN_PER_EPOCH_CHURN_LIMIT_ELECTRA`         | `Gwei(2**7 * 10**9)` (= 128,000,000,000) |
 | `MAX_PER_EPOCH_ACTIVATION_EXIT_CHURN_LIMIT` | `Gwei(2**8 * 10**9)` (= 256,000,000,000) |
 
-@BERA: Churn is related to how many validators can exit at any given point, such that too many validators cannot exit in a short period of time. We adopt these values for spec parity, although realistically we will never hit these as our validator set size is much smaller.
+@BERA: Churn is related to how many validators can exit at any given point, such that too many validators cannot exit in a short period of time. We choose to ignore all churn related changes due to our dramatically smaller validator set size, where churn is less relevant.
 
 ## Containers
 
@@ -561,8 +561,6 @@ def is_fully_withdrawable_validator(validator: Validator, balance: Gwei, epoch: 
 
 #### Modified `is_partially_withdrawable_validator`
 
-@BERA: Will need adopt this change so that we can appropriately check if a validator has excess balance, i.e. greater than 250k BERA.
-
 *Note*: The function `is_partially_withdrawable_validator` is modified to use `get_max_effective_balance` instead of `MAX_EFFECTIVE_BALANCE` and `has_execution_withdrawal_credential` instead of `has_eth1_withdrawal_credential`.
 
 ```python
@@ -580,20 +578,20 @@ def is_partially_withdrawable_validator(validator: Validator, balance: Gwei) -> 
     )
 ```
 
+@BERA: We do not need to deviate from this.
+
 ### Misc
 
 #### New `get_committee_indices`
-
-@BERA: Unused
 
 ```python
 def get_committee_indices(committee_bits: Bitvector) -> Sequence[CommitteeIndex]:
     return [CommitteeIndex(index) for index, bit in enumerate(committee_bits) if bit]
 ```
 
-#### New `get_max_effective_balance`
+@BERA: Not used and hence changes not introduced.
 
-@BERA: Not needed as we always return the chainspec Max effective balance.
+#### New `get_max_effective_balance`
 
 ```python
 def get_max_effective_balance(validator: Validator) -> Gwei:
@@ -606,11 +604,11 @@ def get_max_effective_balance(validator: Validator) -> Gwei:
         return MIN_ACTIVATION_BALANCE
 ```
 
+@BERA: This will always return 10_000_000 million on Berachain.
+
 ### Beacon state accessors
 
 #### New `get_balance_churn_limit`
-
-@BERA: Unknown if needed. Ideally not.
 
 ```python
 def get_balance_churn_limit(state: BeaconState) -> Gwei:
@@ -624,9 +622,9 @@ def get_balance_churn_limit(state: BeaconState) -> Gwei:
     return churn - churn % EFFECTIVE_BALANCE_INCREMENT
 ```
 
-#### New `get_activation_exit_churn_limit`
+@BERA: We ignore churn related changes.
 
-@BERA: Unknown if needed. Ideally not.
+#### New `get_activation_exit_churn_limit`
 
 ```python
 def get_activation_exit_churn_limit(state: BeaconState) -> Gwei:
@@ -636,18 +634,18 @@ def get_activation_exit_churn_limit(state: BeaconState) -> Gwei:
     return min(MAX_PER_EPOCH_ACTIVATION_EXIT_CHURN_LIMIT, get_balance_churn_limit(state))
 ```
 
-#### New `get_consolidation_churn_limit`
+@BERA: We ignore churn related changes.
 
-@BERA: Unknown if needed. Ideally not.
+#### New `get_consolidation_churn_limit`
 
 ```python
 def get_consolidation_churn_limit(state: BeaconState) -> Gwei:
     return get_balance_churn_limit(state) - get_activation_exit_churn_limit(state)
 ```
 
-#### New `get_pending_balance_to_withdraw`
+@BERA: Not introduced as we ignore consolidation processing.
 
-@BERA: Used in `process_withdrawal_request`.
+#### New `get_pending_balance_to_withdraw`
 
 ```python
 def get_pending_balance_to_withdraw(state: BeaconState, validator_index: ValidatorIndex) -> Gwei:
@@ -657,9 +655,9 @@ def get_pending_balance_to_withdraw(state: BeaconState, validator_index: Validat
     )
 ```
 
-#### Modified `get_attesting_indices`
+@BERA: Introduced and used in `process_withdrawal_request`.
 
-@BERA: Unused.
+#### Modified `get_attesting_indices`
 
 *Note*: The function `get_attesting_indices` is modified to support EIP7549.
 
@@ -684,9 +682,9 @@ def get_attesting_indices(state: BeaconState, attestation: Attestation) -> Set[V
     return output
 ```
 
-#### Modified `get_next_sync_committee_indices`
+@BERA: Not introduced as related to attestations.
 
-@BERA: Unused
+#### Modified `get_next_sync_committee_indices`
 
 *Note*: The function `get_next_sync_committee_indices` is modified to use `MAX_EFFECTIVE_BALANCE_ELECTRA` and to use a 16-bit random value instead of an 8-bit random byte in the effective balance filter.
 
@@ -718,11 +716,11 @@ def get_next_sync_committee_indices(state: BeaconState) -> Sequence[ValidatorInd
     return sync_committee_indices
 ```
 
+@BERA: Not introduced as we don't use sync committees
+
 ### Beacon state mutators
 
 #### Modified `initiate_validator_exit`
-
-@BERA: We may need to add this as it's used in `processRegistryUpdates`.
 
 *Note*: The function `initiate_validator_exit` is modified to use the new `compute_exit_epoch_and_update_churn` function.
 
@@ -744,9 +742,19 @@ def initiate_validator_exit(state: BeaconState, index: ValidatorIndex) -> None:
     validator.withdrawable_epoch = Epoch(validator.exit_epoch + MIN_VALIDATOR_WITHDRAWABILITY_DELAY)
 ```
 
-#### New `switch_to_compounding_validator`
+@BERA: We introduce `initiate_validator_exit`. We deviate from the spec by NOT computing the `exit_queue_epoch` using churn, as all churn related changes are not relevant. Instead, the `exit_queue_epoch` will always just follow the existing pattern for validator set cap exits, with the small new introduction of `MinValidatorWithdrawabilityDelay`. `MinValidatorWithdrawabilityDelay` is used to ensure that sufficient time remains to detect slashable behaviour in the scenario that a validator does malicious behaviour before attempting to quickly exit the system.
 
-@BERA: Unused.
+```go
+            nextEpoch := sp.cs.SlotToEpoch(slot) + 1
+            exitQueueEpoch = nextEpoch
+            withdrawableEpoch = nextEpoch + 1 + sp.cs.MinValidatorWithdrawabilityDelay()
+
+            // Set validator exit epoch and withdrawable epoch.
+            validator.SetExitEpoch(exitQueueEpoch)
+            validator.SetWithdrawableEpoch(withdrawableEpoch)
+```
+
+#### New `switch_to_compounding_validator`
 
 ```python
 def switch_to_compounding_validator(state: BeaconState, index: ValidatorIndex) -> None:
@@ -755,9 +763,9 @@ def switch_to_compounding_validator(state: BeaconState, index: ValidatorIndex) -
     queue_excess_active_balance(state, index)
 ```
 
-#### New `queue_excess_active_balance`
+@BERA: Unused as all validators are compounding validators.
 
-@BERA: Unused.
+#### New `queue_excess_active_balance`
 
 ```python
 def queue_excess_active_balance(state: BeaconState, index: ValidatorIndex) -> None:
@@ -776,6 +784,8 @@ def queue_excess_active_balance(state: BeaconState, index: ValidatorIndex) -> No
             slot=GENESIS_SLOT,
         ))
 ```
+
+@BERA: Unused as this is for EIP6110.
 
 #### New `compute_exit_epoch_and_update_churn`
 
@@ -803,6 +813,8 @@ def compute_exit_epoch_and_update_churn(state: BeaconState, exit_balance: Gwei) 
     return state.earliest_exit_epoch
 ```
 
+@BERA: We will not introduce churn related changes.
+
 #### New `compute_consolidation_epoch_and_update_churn`
 
 ```python
@@ -829,6 +841,8 @@ def compute_consolidation_epoch_and_update_churn(state: BeaconState, consolidati
 
     return state.earliest_consolidation_epoch
 ```
+
+@BERA: Not used and hence not introduced.
 
 #### Modified `slash_validator`
 
@@ -1027,6 +1041,8 @@ def process_pending_deposits(state: BeaconState) -> None:
     else:
         state.deposit_balance_to_consume = Gwei(0)
 ```
+
+@BERA: Not used and hence not introduced.
 
 #### New `process_pending_consolidations`
 
@@ -1548,6 +1564,8 @@ def process_deposit(state: BeaconState, deposit: Deposit) -> None:
     )
 ```
 
+@BERA: We have custom deposit processing and as such do not modify here.
+
 ##### Voluntary exits
 
 ###### Modified `process_voluntary_exit`
@@ -1643,6 +1661,12 @@ def process_withdrawal_request(
         ))
 ```
 
+@BERA: This is the meat of the logic introduced for Pectra. We deviate slightly in the following ways:
+
+1. `initiate_validator_exit` does not rely on churn.
+2. `has_compounding_withdrawal_credential` will always be true.
+3. Partial withdrawals will not rely on churn to calculate the exit and withdrawable epochs.
+
 ##### Deposit requests
 
 ###### New `process_deposit_request`
@@ -1662,6 +1686,8 @@ def process_deposit_request(state: BeaconState, deposit_request: DepositRequest)
         slot=state.slot,
     ))
 ```
+
+@BERA: Not processed and hence not introduced.
 
 ##### Execution layer consolidation requests
 
@@ -1703,6 +1729,8 @@ def is_valid_switch_to_compounding_request(
 
     return True
 ```
+
+@BERA: We do not process switches to consolidation requests.
 
 ###### New `process_consolidation_request`
 
@@ -1783,3 +1811,5 @@ def process_consolidation_request(
         target_index=target_index
     ))
 ```
+
+@BERA: We do not process switches to consolidation requests.
