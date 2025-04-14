@@ -742,7 +742,7 @@ def initiate_validator_exit(state: BeaconState, index: ValidatorIndex) -> None:
     validator.withdrawable_epoch = Epoch(validator.exit_epoch + MIN_VALIDATOR_WITHDRAWABILITY_DELAY)
 ```
 
-@BERA: We introduce `initiate_validator_exit`. We deviate from the spec by NOT computing the `exit_queue_epoch` using churn, as all churn related changes are not relevant. Instead, the `exit_queue_epoch` will always just follow the existing pattern for validator set cap exits, with the small new introduction of `MinValidatorWithdrawabilityDelay`. `MinValidatorWithdrawabilityDelay` is used to ensure that sufficient time remains to detect slashable behaviour in the scenario that a validator does malicious behaviour before attempting to quickly exit the system.
+@BERA: We introduce `initiate_validator_exit`. We deviate from the spec by NOT computing the `exit_queue_epoch` using churn, as all churn related changes are not relevant. Instead, the `exit_queue_epoch` will always just follow the existing pattern for validator set cap exits, with the small new introduction of `MinValidatorWithdrawabilityDelay`. `MinValidatorWithdrawabilityDelay` is used to ensure that sufficient time remains to detect slashable behaviour in the scenario that a validator does malicious behaviour before attempting to quickly exit the system. We do not have slashing yet, but introduce `MinValidatorWithdrawabilityDelay` for the future when we do.
 
 ```go
             nextEpoch := sp.cs.SlotToEpoch(slot) + 1
@@ -876,6 +876,8 @@ def slash_validator(state: BeaconState,
     increase_balance(state, whistleblower_index, Gwei(whistleblower_reward - proposer_reward))
 ```
 
+@BERA: We do not have slashing yet and as such, do not introduce this slashing related change.
+
 ## Beacon chain state transition function
 
 ### Epoch processing
@@ -924,6 +926,8 @@ def process_registry_updates(state: BeaconState) -> None:
             validator.activation_epoch = activation_epoch
 ```
 
+@BERA: Previously we ignored the case where a validator's balance fell below the `EJECTION_BALANCE` as this was not possible since we didn't have slashing or partial withdrawals. We now introduce this.
+
 #### Modified `process_slashings`
 
 *Note*: The function `process_slashings` is modified to use a new algorithm to compute correlation penalty.
@@ -946,6 +950,8 @@ def process_slashings(state: BeaconState) -> None:
             decrease_balance(state, ValidatorIndex(index), penalty)
 ```
 
+@BERA: We do not process slashings.
+
 #### New `apply_pending_deposit`
 
 ```python
@@ -967,6 +973,8 @@ def apply_pending_deposit(state: BeaconState, deposit: PendingDeposit) -> None:
         validator_index = ValidatorIndex(validator_pubkeys.index(deposit.pubkey))
         increase_balance(state, validator_index, deposit.amount)
 ```
+
+@BERA: We have a custom deposit processing loop and as such, ignore this.
 
 #### New `process_pending_deposits`
 
@@ -1042,7 +1050,7 @@ def process_pending_deposits(state: BeaconState) -> None:
         state.deposit_balance_to_consume = Gwei(0)
 ```
 
-@BERA: Not used and hence not introduced.
+@BERA: We have a custom deposit processing loop and as such, ignore this.
 
 #### New `process_pending_consolidations`
 
@@ -1070,6 +1078,8 @@ def process_pending_consolidations(state: BeaconState) -> None:
     state.pending_consolidations = state.pending_consolidations[next_pending_consolidation:]
 ```
 
+@BERA: We do not process consolidations and as such ignore this.
+
 #### Modified `process_effective_balance_updates`
 
 *Note*: The function `process_effective_balance_updates` is modified to use the new limit for the maximum effective balance.
@@ -1092,6 +1102,8 @@ def process_effective_balance_updates(state: BeaconState) -> None:
             validator.effective_balance = min(balance - balance % EFFECTIVE_BALANCE_INCREMENT, max_effective_balance)
 ```
 
+ @BERA: This is effectively already done.
+
 ### Execution engine
 
 #### Request data
@@ -1106,6 +1118,8 @@ class NewPayloadRequest(object):
     parent_beacon_block_root: Root
     execution_requests: ExecutionRequests  # [New in Electra]
 ```
+
+@BERA: Implemented.
 
 #### Engine APIs
 
@@ -1124,6 +1138,8 @@ def is_valid_block_hash(self: ExecutionEngine,
     ...
 ```
 
+@BERA: Implemented.
+
 ##### Modified `notify_new_payload`
 
 *Note*: The function `notify_new_payload` is modified to include the additional `execution_requests_list`.
@@ -1139,6 +1155,8 @@ def notify_new_payload(self: ExecutionEngine,
     """
     ...
 ```
+
+@BERA: Implemented.
 
 ##### Modified `verify_and_notify_new_payload`
 
@@ -1178,6 +1196,8 @@ def verify_and_notify_new_payload(self: ExecutionEngine,
     return True
 ```
 
+@BERA: Implemented.
+
 ### Block processing
 
 ```python
@@ -1190,6 +1210,12 @@ def process_block(state: BeaconState, block: BeaconBlock) -> None:
     process_operations(state, block.body)  # [Modified in Electra:EIP6110:EIP7002:EIP7549:EIP7251]
     process_sync_aggregate(state, block.body.sync_aggregate)
 ```
+
+@BERA: We modify:
+
+- `process_withdrawals` - Update pending partial withdrawals
+- `process_execution_payload` - Implemented.
+- `process_operations` - Call `process_withdrawal_request` in `process_operations`
 
 #### Withdrawals
 
@@ -1257,6 +1283,8 @@ def get_expected_withdrawals(state: BeaconState) -> Tuple[Sequence[Withdrawal], 
     return withdrawals, processed_partial_withdrawals_count
 ```
 
+@BERA: We need to extend our implementation to handle `pending_partial_withdrawals`.
+
 ##### Modified `process_withdrawals`
 
 *Note*: The function `process_withdrawals` is modified to support EIP7251.
@@ -1291,6 +1319,8 @@ def process_withdrawals(state: BeaconState, payload: ExecutionPayload) -> None:
         state.next_withdrawal_validator_index = next_validator_index
 ```
 
+@BERA: We adopt the change around `processed_partial_withdrawals_count`.
+
 #### Execution payload
 
 ##### New `get_execution_requests_list`
@@ -1311,6 +1341,8 @@ def get_execution_requests_list(execution_requests: ExecutionRequests) -> Sequen
         if len(request_data) != 0
     ]
 ```
+
+@BERA: Implemented.
 
 ##### Modified `process_execution_payload`
 
@@ -1360,6 +1392,8 @@ def process_execution_payload(state: BeaconState, body: BeaconBlockBody, executi
     )
 ```
 
+@BERA: Implemented.
+
 #### Operations
 
 ##### Modified `process_operations`
@@ -1390,6 +1424,8 @@ def process_operations(state: BeaconState, body: BeaconBlockBody) -> None:
     for_ops(body.execution_requests.withdrawals, process_withdrawal_request)  # [New in Electra:EIP7002:EIP7251]
     for_ops(body.execution_requests.consolidations, process_consolidation_request)  # [New in Electra:EIP7251]
 ```
+
+@BERA: We implement the change where we handle each `process_withdrawal_request`.
 
 ##### Attestations
 
@@ -1446,6 +1482,8 @@ def process_attestation(state: BeaconState, attestation: Attestation) -> None:
     increase_balance(state, get_beacon_proposer_index(state), proposer_reward)
 ```
 
+@BERA: Ignore as we don't handle attestations.
+
 ##### Deposits
 
 ###### Modified `get_validator_from_deposit`
@@ -1472,6 +1510,8 @@ def get_validator_from_deposit(pubkey: BLSPubkey, withdrawal_credentials: Bytes3
     return validator
 ```
 
+@BERA: In Berachain, the implementation can be found in `NewValidatorFromDeposit`. No change is required.
+
 ###### Modified `add_validator_to_registry`
 
 *Note*: The function `add_validator_to_registry` is modified to use the modified `get_validator_from_deposit`.
@@ -1489,6 +1529,8 @@ def add_validator_to_registry(state: BeaconState,
     set_or_append_list(state.current_epoch_participation, index, ParticipationFlags(0b0000_0000))
     set_or_append_list(state.inactivity_scores, index, uint64(0))
 ```
+
+@BERA: No change is required.
 
 ###### Modified `apply_deposit`
 
@@ -1519,6 +1561,8 @@ def apply_deposit(state: BeaconState,
     ))
 ```
 
+@BERA: We do not implement EIP7251 and as such no change is required.
+
 ###### New `is_valid_deposit_signature`
 
 ```python
@@ -1535,6 +1579,8 @@ def is_valid_deposit_signature(pubkey: BLSPubkey,
     signing_root = compute_signing_root(deposit_message, domain)
     return bls.Verify(pubkey, signing_root, signature)
 ```
+
+@BERA: We do not implement EIP7251 and as such no change is required.
 
 ###### Modified `process_deposit`
 
@@ -1593,6 +1639,8 @@ def process_voluntary_exit(state: BeaconState, signed_voluntary_exit: SignedVolu
     # Initiate exit
     initiate_validator_exit(state, voluntary_exit.validator_index)
 ```
+
+@BERA: This is used for voluntary exits, signed using the signing key. We do not support this mechanism of exiting and as such ignore this method entirely.
 
 ##### Execution layer withdrawal requests
 
