@@ -110,6 +110,8 @@
 
 ## Introduction
 
+@BERA: In Berachain, we break the Electra hardfork into multiple hard forks, the first of which is electra0. This annotation is purely for Electra0 and we may consider adding support for excluded EIPs in later Electra hard-forks, e.g. Electra1.
+
 Electra is a consensus-layer upgrade containing a number of features. Including:
 
 - [EIP-6110](https://eips.ethereum.org/EIPS/eip-6110): Supply validator deposits on chain - @BERA: Changes related to EIP are is skipped as we have a functional deposit system.
