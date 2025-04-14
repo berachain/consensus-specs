@@ -453,7 +453,7 @@ class BeaconState(Container):
     pending_consolidations: List[PendingConsolidation, PENDING_CONSOLIDATIONS_LIMIT]  # [New in Electra:EIP7251] @BERA: Unused
 ```
 
-@BERA: We must introduce the `pending_partial_withdrawals` as it's necessary for the core withdrawals logic.
+@BERA: We must introduce the `pending_partial_withdrawals` as it's necessary for the core withdrawals logic (specifically to allow partial withdrawals).
 
 ## Helper functions
 
