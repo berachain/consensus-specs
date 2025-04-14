@@ -265,8 +265,6 @@ class PendingPartialWithdrawal(Container):
 
 #### `PendingConsolidation`
 
-@BERA: Not used
-
 *Note*: The container is new in EIP7251.
 
 ```python
@@ -294,8 +292,6 @@ class DepositRequest(Container):
 
 #### `WithdrawalRequest`
 
-@BERA: Added
-
 *Note*: The container is new in EIP7251:EIP7002.
 
 ```python
@@ -306,8 +302,6 @@ class WithdrawalRequest(Container):
 ```
 
 #### `ConsolidationRequest`
-
-@BERA: Added but unused
 
 *Note*: The container is new in EIP7251.
 
@@ -338,6 +332,8 @@ class SingleAttestation(Container):
     data: AttestationData
     signature: BLSSignature
 ```
+
+@BERA: Not used and hence not introduced.
 
 ### Modified containers
 
@@ -489,7 +485,7 @@ class BeaconState(Container):
         i += 1
 ```
 
-@BERA: We do not use this for computing proposer index in berachain.
+@BERA: We do not use this for computing proposer index in berachain as the proposer is chosen by CometBFT.
 
 #### Modified `is_eligible_for_activation_queue`
 
