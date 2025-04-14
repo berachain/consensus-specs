@@ -453,7 +453,7 @@ class BeaconState(Container):
     pending_consolidations: List[PendingConsolidation, PENDING_CONSOLIDATIONS_LIMIT]  # [New in Electra:EIP7251] @BERA: Unused
 ```
 
-@BERA: We must introduce the `pending_partial_withdrawals` as it's necessarily for the core withdrawals logic.
+@BERA: We must introduce the `pending_partial_withdrawals` as it's necessary for the core withdrawals logic.
 
 ## Helper functions
 
@@ -464,7 +464,7 @@ class BeaconState(Container):
 *Note*: The function `compute_proposer_index` is modified to use `MAX_EFFECTIVE_BALANCE_ELECTRA` and to use a 16-bit random value instead of an 8-bit random byte in the effective balance filter.
 
 ```python
-    def compute_proposer_index(state: BeaconState, indices: Sequence[ValidatorIndex], seed: Bytes32) -> ValidatorIndex:
+def compute_proposer_index(state: BeaconState, indices: Sequence[ValidatorIndex], seed: Bytes32) -> ValidatorIndex:
     """
     Return from ``indices`` a random index sampled by effective balance.
     """
