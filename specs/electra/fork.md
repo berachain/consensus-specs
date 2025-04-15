@@ -62,8 +62,6 @@ Note that for the pure Electra networks, we don't apply `upgrade_to_electra` sin
 
 ### Upgrading the state
 
-@BERA: We need to update the BeaconState fork version
-
 If `state.slot % SLOTS_PER_EPOCH == 0` and `compute_epoch_at_slot(state.slot) == ELECTRA_FORK_EPOCH`,
 an irregular state change is made to upgrade to Electra.
 
@@ -173,3 +171,5 @@ def upgrade_to_electra(pre: deneb.BeaconState) -> BeaconState:
 
     return post
 ```
+
+@BERA: We need to update the BeaconState fork version and set `pending_partial_withdrawals=[]`.
