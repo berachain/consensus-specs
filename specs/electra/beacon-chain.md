@@ -895,7 +895,7 @@ def process_epoch(state: BeaconState) -> None:
     process_justification_and_finalization(state)
     process_inactivity_updates(state)
     process_rewards_and_penalties(state)
-    process_registry_updates(state)  # [Modified in Electra:EIP7251] @BERA: Change required.
+    process_registry_updates(state)  # [Modified in Electra:EIP7251] @BERA: Modified to use MinActivationBalance
     process_slashings(state)  # [Modified in Electra:EIP7251] @BERA: Unused
     process_eth1_data_reset(state)
     process_pending_deposits(state)  # [New in Electra:EIP7251] @BERA: Unused
