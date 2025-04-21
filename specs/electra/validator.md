@@ -46,7 +46,7 @@ Please see related Beacon Chain doc before continuing and use them as a referenc
 ## Helpers
 
 ### Modified `GetPayloadResponse`
-
+@BERA: BuiltExecutionPayloadEnv for Bectra has been implemented.
 ```python
 @dataclass
 class GetPayloadResponse(object):
@@ -61,6 +61,7 @@ class GetPayloadResponse(object):
 ### Modified containers
 
 #### `AggregateAndProof`
+@BERA: Skip as we don't implement EIP7549
 
 ```python
 class AggregateAndProof(Container):
@@ -70,6 +71,7 @@ class AggregateAndProof(Container):
 ```
 
 #### `SignedAggregateAndProof`
+@BERA: Skip as we don't implement EIP7549
 
 ```python
 class SignedAggregateAndProof(Container):
@@ -82,6 +84,7 @@ class SignedAggregateAndProof(Container):
 ### `ExecutionEngine`
 
 #### Modified `get_payload`
+@BERA: Implemented already
 
 Given the `payload_id`, `get_payload` returns the most recent version of the execution payload that
 has been built since the corresponding call to `notify_forkchoice_updated` method.
@@ -100,10 +103,12 @@ def get_payload(self: ExecutionEngine, payload_id: PayloadId) -> GetPayloadRespo
 ### Constructing the `BeaconBlockBody`
 
 #### Attester slashings
+@BERA: Skip as we don't implement slashing
 
 Changed the max attester slashings size to `MAX_ATTESTER_SLASHINGS_ELECTRA`.
 
 #### Attestations
+@BERA: Skip as we don't implement attestations
 
 Changed the max attestations size to `MAX_ATTESTATIONS_ELECTRA`.
 
@@ -136,6 +141,7 @@ def compute_on_chain_aggregate(network_aggregates: Sequence[Attestation]) -> Att
 ```
 
 #### Deposits
+@BERA: Skip as we don't EIP6110 at the moment
 
 *[New in Electra:EIP6110]* The expected number of deposits MUST be changed from `min(MAX_DEPOSITS, eth1_data.deposit_count - state.eth1_deposit_index)` to the result of the following function:
 
@@ -183,6 +189,7 @@ def get_eth1_vote(state: BeaconState, eth1_chain: Sequence[Eth1Block]) -> Eth1Da
 ```
 
 #### Execution payload
+@BERA: We must update `get_expected_withdrawals`.
 
 `prepare_execution_payload` is updated from the Deneb specs.
 
@@ -219,6 +226,7 @@ def prepare_execution_payload(state: BeaconState,
 ```
 
 #### Execution Requests
+@BERA: Already implemented
 
 *[New in Electra]*
 
@@ -274,6 +282,7 @@ def get_execution_requests(execution_requests_list: Sequence[bytes]) -> Executio
 ```
 
 ### Constructing the `BlobSidecar`s
+@BERA: Skip as we don't implement EIP7691
 
 #### Sidecar
 
@@ -285,6 +294,7 @@ def compute_subnet_for_blob_sidecar(blob_index: BlobIndex) -> SubnetID:
 ```
 
 ## Attesting
+@BERA: Skip as we don't implement Attestations
 
 ### Construct attestation
 

@@ -171,3 +171,5 @@ def upgrade_to_electra(pre: deneb.BeaconState) -> BeaconState:
 
     return post
 ```
+
+@BERA: We need to update the BeaconState fork version and set `pending_partial_withdrawals=[]`.
