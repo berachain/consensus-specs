@@ -110,7 +110,7 @@
 
 ## Introduction
 
-@BERA: In Berachain, we break the Electra hardfork into multiple hard forks, the first of which is electra0. This annotation is purely for Electra0 and we may consider adding support for excluded EIPs in later Electra hard-forks, e.g. Electra1.
+@BERA: In Berachain, we break the Electra hardfork into multiple hard forks, the first of which is electra0. This annotation is purely for Electra0 and we may consider adding support for excluded EIPs in later Electra hard-forks, e.g. EIP6110 in Electra1.
 
 Electra is a consensus-layer upgrade containing a number of features. Including:
 
@@ -744,7 +744,9 @@ def initiate_validator_exit(state: BeaconState, index: ValidatorIndex) -> None:
     validator.withdrawable_epoch = Epoch(validator.exit_epoch + MIN_VALIDATOR_WITHDRAWABILITY_DELAY)
 ```
 
-@BERA: We introduce `initiate_validator_exit`. We deviate from the spec by NOT computing the `exit_queue_epoch` using churn, as all churn related changes are not relevant. Instead, the `exit_queue_epoch` will always just follow the existing pattern for validator set cap exits, with the small new introduction of `MinValidatorWithdrawabilityDelay`. `MinValidatorWithdrawabilityDelay` is used to ensure that sufficient time remains to detect slashable behaviour in the scenario that a validator does malicious behaviour before attempting to quickly exit the system. We do not have slashing yet, but introduce `MinValidatorWithdrawabilityDelay` for the future when we do.
+@BERA: We introduce `initiate_validator_exit`. We deviate from the spec by NOT computing the `exit_queue_epoch` using churn, as all churn related changes are not relevant. Instead, the `exit_queue_epoch` will always just follow the existing pattern for validator set cap exits, with the small new introduction of `MIN_VALIDATOR_WITHDRAWABILITY_DELAY`. `MIN_VALIDATOR_WITHDRAWABILITY_DELAY` is used to ensure that sufficient time remains to detect slashable behaviour in the scenario that a validator does malicious behaviour before attempting to quickly exit the system. We do not have slashing yet, but introduce `MIN_VALIDATOR_WITHDRAWABILITY_DELAY` for the future when we do.
+
+By default, `MIN_VALIDATOR_WITHDRAWABILITY_DELAY` is set to 192 epochs which is 27 hours on Berachain. We're still considering the appropriate value for this but a large delay gives us bandwidth for emergency hard forks if a vulnerability is found.
 
 ```go
             nextEpoch := sp.cs.SlotToEpoch(slot) + 1
@@ -928,7 +930,11 @@ def process_registry_updates(state: BeaconState) -> None:
             validator.activation_epoch = activation_epoch
 ```
 
-@BERA: Previously we ignored the case where a validator's balance fell below the `EJECTION_BALANCE` as this was not possible since we didn't have slashing or partial withdrawals. We now introduce this.
+@BERA: Previously we ignored the case where a validator's balance fell below the `EJECTION_BALANCE` as this was not possible since we didn't have slashing or partial withdrawals.
+
+We continue to ignore this case as there is not forseeable way for a validator's balance to fall below the EJECTION_BALANCE balance, without it directly initiating a validator exit.
+
+For example, post-electra, if a Partial Withdrawal Request is made, the balance must remain above `MIN_ACTIVATION_BALANCE`. A Full Withdrawal Request will remove the entire balance and initiate a validator
 
 #### Modified `process_slashings`
 
